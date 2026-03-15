@@ -22,7 +22,7 @@ A simple Android notes application built with Java and SQLite for local storage.
 
 - Android Studio (Arctic Fox or later recommended)
 - Android SDK 30 (Android 11)
-- Gradle 7.x
+- Gradle 6.7.1
 
 ## Building the Project
 
@@ -31,6 +31,23 @@ A simple Android notes application built with Java and SQLite for local storage.
 3. Wait for Gradle to sync dependencies
 4. Build the project (Build > Make Project)
 5. Run on an emulator or physical device
+
+## Updating the App Version
+
+To release a new version:
+
+1. Update `versionName` in `app/build.gradle`:
+   ```gradle
+   defaultConfig {
+       versionName "1.0"  // Change this to your new version
+   }
+   ```
+2. Run the "Build and Release" workflow on GitHub with "release" as the release type
+3. The new version will be tagged and added to the Releases page automatically
+
+## Releases
+
+Pre-built APK files are available on the [Releases](https://github.com/s17labs/Notes/releases) page.
 
 ## Project Structure
 
