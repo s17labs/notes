@@ -35,10 +35,24 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assemble${{ github.event.inputs.release_type == 'release' && 'Release' || 'Debug' }}
 
+      - name: Get app version
+        if: github.event.inputs.release_type == 'release'
+        id: version
+        run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create tag for release
+        if: github.event.inputs.release_type == 'release'
+        run: |
+          git tag v${{ steps.version.outputs.VERSION }}
+          git push origin v${{ steps.version.outputs.VERSION }}
+
       - name: Upload APK to Releases
         if: github.event.inputs.release_type == 'release'
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
           files: app/build/outputs/apk/release/app-release.apk
           generate_release_notes: true
         env:
