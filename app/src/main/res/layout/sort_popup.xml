@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/sort_popup_background"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:minWidth="180dp"
+    android:elevation="8dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sort by"
+        android:textColor="@color/textSecondary"
+        android:textSize="11sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.1"
+        android:paddingHorizontal="4dp"
+        android:paddingBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/sortByGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/sortByCreated"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Date created"
+            android:textColor="@color/textPrimary"
+            android:textSize="14sp"
+            android:buttonTint="@color/colorAccent"
+            android:paddingStart="8dp"
+            android:gravity="center_vertical" />
+
+        <RadioButton
+            android:id="@+id/sortByModified"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Date modified"
+            android:textColor="@color/textPrimary"
+            android:textSize="14sp"
+            android:buttonTint="@color/colorAccent"
+            android:paddingStart="8dp"
+            android:gravity="center_vertical" />
+
+    </RadioGroup>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        android:layout_marginVertical="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Order"
+        android:textColor="@color/textSecondary"
+        android:textSize="11sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.1"
+        android:paddingHorizontal="4dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp" />
+
+    <LinearLayout
+        android:id="@+id/sortOrderGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/btnAscending"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_down"
+            android:contentDescription="Ascending"
+            android:padding="10dp"
+            android:scaleType="fitCenter" />
+
+        <ImageButton
+            android:id="@+id/btnDescending"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_up"
+            android:contentDescription="Descending"
+            android:padding="10dp"
+            android:scaleType="fitCenter" />
+
+    </LinearLayout>
+
+</LinearLayout>
