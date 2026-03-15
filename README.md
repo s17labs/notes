@@ -14,8 +14,8 @@ A simple Android notes application built with Java and SQLite for local storage.
 ## Screenshots
 
 <p align="center">
-  <img src="screenshots/main_screen.png" width="250" alt="Main Screen">
-  <img src="screenshots/note_editor.png" width="250" alt="Note Editor">
+  <img src="screenshots/main_screen.png" width="150" alt="Main Screen">
+  <img src="screenshots/note_screen.png" width="150" alt="Note Editor">
 </p>
 
 ## Requirements
