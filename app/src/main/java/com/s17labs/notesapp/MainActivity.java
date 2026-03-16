@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
 
     @Override
     public void onNoteClick(long id) {
-        Intent intent = new Intent(MainActivity.this, NoteActivity.class);
+        Intent intent = new Intent(MainActivity.this, NotePreviewActivity.class);
         intent.putExtra("NOTE_ID", id);
         startActivity(intent);
     }
