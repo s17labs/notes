@@ -1,10 +1,8 @@
 <p align="center">
-  <img src="screenshots/app_icon.png" width="100" alt="App Icon">
+  <img src="screenshots/app_icon.png" width="84" alt="App Icon">
 </p>
 
 <h1 align="center">Notes</h1>
-
----
 
 <p align="center">
   A simple, clean Android notes application with markdown support, pinning, and trash management.
@@ -24,6 +22,10 @@
 - **Export/Import** - Backup and restore your notes as JSON
 - **Dark Theme** - Clean dark UI design
 
+## Releases
+
+Pre-built APK files are available on the [Releases](https://github.com/s17labs/Notes/releases) page.
+
 ## Screenshots
 
 <p align="center">
@@ -31,7 +33,8 @@
   <img src="screenshots/main_screen.png" width="100" alt="Main Screen">
   <img src="screenshots/note_screen.png" width="100" alt="Note Scree">
 </p>
-More Screenshots [here](https://github.com/s17labs/notes/tree/main/screenshots)
+
+[View more Screenshots here](https://github.com/s17labs/notes/tree/main/screenshots)
 
 ## Requirements
 
@@ -59,10 +62,6 @@ To release a new version:
    ```
 2. Run the "Build and Release" workflow on GitHub with "release" as the release type
 3. The new version will be tagged and added to the Releases page automatically
-
-## Releases
-
-Pre-built APK files are available on the [Releases](https://github.com/s17labs/Notes/releases) page.
 
 ## Project Structure
 
