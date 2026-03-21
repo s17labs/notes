@@ -38,19 +38,19 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: |
-          if [ "${{ github.event.inputs.release_type }}" = "release" ]; then
-            ./gradlew assembleRelease
-          else
-            ./gradlew assembleDebug
-          fi
+        run: ./gradlew assembleDebug
 
       - name: Get app version
-        if: github.event.inputs.release_type == 'release'
         id: version
         run: |
           VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)
+          VERSION_UNDERSCORE=${VERSION//./_}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION_UNDERSCORE=$VERSION_UNDERSCORE" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk "Notes_com_s17labs_notesapp_${{ steps.version.outputs.VERSION_UNDERSCORE }}.apk"
 
       - name: Create tag for release
         if: github.event.inputs.release_type == 'release'
@@ -65,7 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.VERSION }}
-          files: app/build/outputs/apk/release/*.apk
+          files: Notes_com_s17labs_notesapp_${{ steps.version.outputs.VERSION_UNDERSCORE }}.apk
           generate_release_notes: true
           replace: true
         env:
@@ -74,6 +74,6 @@ jobs:
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug.apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Notes_com_s17labs_notesapp_${{ steps.version.outputs.VERSION_UNDERSCORE }}.apk
+          path: Notes_com_s17labs_notesapp_${{ steps.version.outputs.VERSION_UNDERSCORE }}.apk
           
