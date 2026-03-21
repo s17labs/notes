@@ -67,6 +67,7 @@ jobs:
           tag_name: v${{ steps.version.outputs.VERSION }}
           files: app/build/outputs/apk/release/*.apk
           generate_release_notes: true
+          replace: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
