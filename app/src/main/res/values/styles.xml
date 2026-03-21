@@ -13,6 +13,15 @@
         <item name="colorSurface">#1a1a1d</item>
         <item name="colorOnSurface">#f1f1f1</item>
         <item name="android:colorBackground">#0e0e10</item>
+        <item name="android:windowBackground">#0e0e10</item>
+        <item name="android:statusBarColor">#0e0e10</item>
+        <item name="android:navigationBarColor">#0e0e10</item>
+        <item name="android:colorControlActivated">#ff4136</item>
+        <item name="android:textCursorDrawable">@drawable/cursor_drawable</item>
+    </style>
+
+    <style name="SplashTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="android:statusBarColor">#0e0e10</item>
         <item name="android:navigationBarColor">#0e0e10</item>
     </style>

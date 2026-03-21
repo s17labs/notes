@@ -11,6 +11,7 @@ import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -26,16 +27,22 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     private final Context context;
     private Cursor cursor;
     private final OnNoteClickListener listener;
+    private boolean isTrashView = false;
 
     public interface OnNoteClickListener {
         void onNoteClick(long id);
-        void onNoteLongClick(long id);
+        void onNoteLongClick(long id, View view);
     }
 
     public NoteAdapter(Context context, Cursor cursor, OnNoteClickListener listener) {
+        this(context, cursor, listener, false);
+    }
+
+    public NoteAdapter(Context context, Cursor cursor, OnNoteClickListener listener, boolean isTrashView) {
         this.context = context;
         this.cursor = cursor;
         this.listener = listener;
+        this.isTrashView = isTrashView;
     }
 
     @NonNull
@@ -53,6 +60,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
         String noteText = cursor.getString(cursor.getColumnIndexOrThrow("note_text"));
         String dateText = cursor.getString(cursor.getColumnIndexOrThrow("date_text"));
+        int pinned = cursor.getInt(cursor.getColumnIndexOrThrow("pinned"));
 
         if (title != null && !title.isEmpty()) {
             holder.noteTitle.setText(title);
@@ -64,9 +72,11 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         holder.noteText.setText(parseMarkdown(noteText));
         holder.dateText.setText(dateText);
         
+        holder.pinIcon.setVisibility(pinned == 1 ? View.VISIBLE : View.GONE);
+
         holder.itemView.setOnClickListener(v -> listener.onNoteClick(id));
         holder.itemView.setOnLongClickListener(v -> {
-            listener.onNoteLongClick(id);
+            listener.onNoteLongClick(id, v);
             return true;
         });
     }
@@ -80,12 +90,16 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         TextView noteTitle;
         TextView noteText;
         TextView dateText;
+        ImageView pinIcon;
+        com.google.android.material.card.MaterialCardView cardView;
 
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             noteTitle = itemView.findViewById(R.id.noteTitle);
             noteText = itemView.findViewById(R.id.noteText);
             dateText = itemView.findViewById(R.id.dateText);
+            pinIcon = itemView.findViewById(R.id.pinIcon);
+            cardView = (com.google.android.material.card.MaterialCardView) itemView;
         }
     }
 

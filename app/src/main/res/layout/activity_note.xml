@@ -38,27 +38,37 @@
                 android:textStyle="bold" />
 
             <ImageButton
-                android:id="@+id/deleteButton"
+                android:id="@+id/pinButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Delete"
-                android:src="@drawable/ic_delete"
+                android:contentDescription="Pin"
+                android:src="@drawable/ic_pin_filled"
                 app:tint="@color/textSecondary" />
 
             <ImageButton
                 android:id="@+id/saveButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginEnd="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Save"
                 android:src="@drawable/ic_save"
                 app:tint="@color/colorAccent" />
 
+            <ImageButton
+                android:id="@+id/moreButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="More"
+                android:src="@drawable/ic_more_vert"
+                app:tint="@color/textSecondary" />
+
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/noteCard"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -78,9 +88,10 @@
                     android:id="@+id/noteContentLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:descendantFocusability="beforeDescendants"
                     android:orientation="vertical"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="false">
 
                     <EditText
                         android:id="@+id/titleEditText"
@@ -88,11 +99,14 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/title_background"
                         android:hint="Title"
+                        android:imeOptions="actionNext"
                         android:inputType="text"
+                        android:nextFocusDown="@id/noteEditText"
                         android:padding="16dp"
                         android:textColor="@color/textPrimary"
                         android:textColorHint="@color/textSecondary"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:importantForAutofill="no" />
 
                     <View
                         android:layout_width="match_parent"

@@ -7,20 +7,18 @@
     android:padding="20dp">
 
     <TextView
-        android:id="@+id/deleteTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Delete Note"
+        android:text="Import Notes"
         android:textColor="@color/textPrimary"
         android:textSize="18sp"
         android:textStyle="bold"
         android:paddingBottom="8dp" />
 
     <TextView
-        android:id="@+id/deleteMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Are you sure you want to delete this note?"
+        android:text="Only notes backups created by this app can be imported. Importing invalid files may cause errors."
         android:textColor="@color/textPrimary"
         android:textSize="14sp"
         android:paddingBottom="20dp" />
@@ -43,10 +41,10 @@
             android:background="?attr/selectableItemBackgroundBorderless" />
 
         <TextView
-            android:id="@+id/btnDelete"
+            android:id="@+id/btnContinue"
             android:layout_width="wrap_content"
             android:layout_height="44dp"
-            android:text="Delete"
+            android:text="Continue"
             android:textColor="@color/colorAccent"
             android:textSize="14sp"
             android:textStyle="bold"

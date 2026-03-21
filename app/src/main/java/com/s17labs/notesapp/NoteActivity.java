@@ -1,12 +1,19 @@
 package com.s17labs.notesapp;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.inputmethod.EditorInfo;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,9 +41,15 @@ public class NoteActivity extends AppCompatActivity {
     private TextView charCountText;
     private TextView dateText;
     private ImageButton saveButton;
+    private ImageButton pinButton;
     private boolean hasChanges = false;
     private int activeColor;
     private int inactiveColor;
+    private boolean isPinned = false;
+    private boolean autoSaveEnabled = true;
+    private Handler autoSaveHandler;
+    private Runnable autoSaveRunnable;
+    private static final long AUTO_SAVE_DELAY = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,35 +57,35 @@ public class NoteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_note);
 
         dbHelper = new NoteDbHelper(this);
+        autoSaveEnabled = NoteDbHelper.isAutoSaveEnabled(this);
+        autoSaveHandler = new Handler(Looper.getMainLooper());
+        
         titleEditText = findViewById(R.id.titleEditText);
         noteEditText = findViewById(R.id.noteEditText);
+        
+        int accentColor = getResources().getColor(R.color.colorAccent, null);
+        
+        Drawable cursorDrawable = getResources().getDrawable(R.drawable.cursor_drawable, getTheme());
+        titleEditText.setTextCursorDrawable(cursorDrawable);
+        noteEditText.setTextCursorDrawable(cursorDrawable);
+        
+        applyHandleTint(titleEditText, accentColor);
+        applyHandleTint(noteEditText, accentColor);
+        
         charCountText = findViewById(R.id.charCountText);
         dateText = findViewById(R.id.dateText);
         TextView toolbarTitle = findViewById(R.id.toolbarTitle);
         ImageButton backButton = findViewById(R.id.backButton);
         saveButton = findViewById(R.id.saveButton);
-        ImageButton deleteButton = findViewById(R.id.deleteButton);
+        pinButton = findViewById(R.id.pinButton);
+        ImageButton moreButton = findViewById(R.id.moreButton);
         LinearLayout noteContentLayout = findViewById(R.id.noteContentLayout);
 
         activeColor = getResources().getColor(R.color.colorAccent, null);
         inactiveColor = getResources().getColor(R.color.textSecondary, null);
 
-        noteContentLayout.setOnClickListener(v -> {
+        noteEditText.setOnClickListener(v -> {
             noteEditText.requestFocus();
-            int cursorPosition = noteEditText.getText() != null ? noteEditText.getText().length() : 0;
-            noteEditText.setSelection(cursorPosition);
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            imm.showSoftInput(noteEditText, InputMethodManager.SHOW_IMPLICIT);
-        });
-
-        noteEditText.setOnTouchListener((v, event) -> {
-            noteEditText.onTouchEvent(event);
-            noteEditText.requestFocus();
-            int cursorPosition = noteEditText.getOffsetForPosition(event.getX(), event.getY());
-            noteEditText.setSelection(cursorPosition);
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            imm.showSoftInput(noteEditText, InputMethodManager.SHOW_IMPLICIT);
-            return true;
         });
 
         noteId = getIntent().getLongExtra("NOTE_ID", -1);
@@ -79,15 +93,31 @@ public class NoteActivity extends AppCompatActivity {
         if (noteId != -1) {
             toolbarTitle.setText("Edit Note");
             loadNote();
-            deleteButton.setVisibility(View.VISIBLE);
+            noteEditText.requestFocus();
+            noteEditText.postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                imm.showSoftInput(noteEditText, InputMethodManager.SHOW_IMPLICIT);
+            }, 100);
         } else {
             toolbarTitle.setText("New Note");
-            deleteButton.setVisibility(View.GONE);
             charCountText.setText("0 characters");
             dateText.setText("");
+            noteEditText.requestFocus();
+            noteEditText.postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                imm.showSoftInput(noteEditText, InputMethodManager.SHOW_IMPLICIT);
+            }, 100);
         }
 
         updateSaveButtonColor();
+        updatePinButton();
+        updateSaveButtonVisibility();
+
+        autoSaveRunnable = () -> {
+            if (hasChanges && autoSaveEnabled) {
+                autoSaveNote();
+            }
+        };
 
         TextWatcher textWatcher = new TextWatcher() {
             @Override
@@ -96,6 +126,11 @@ public class NoteActivity extends AppCompatActivity {
                 if (!hasChanges) {
                     hasChanges = true;
                     updateSaveButtonColor();
+                    updateSaveButtonVisibility();
+                }
+                if (autoSaveEnabled) {
+                    autoSaveHandler.removeCallbacks(autoSaveRunnable);
+                    autoSaveHandler.postDelayed(autoSaveRunnable, AUTO_SAVE_DELAY);
                 }
             }
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -107,28 +142,161 @@ public class NoteActivity extends AppCompatActivity {
 
         backButton.setOnClickListener(v -> onBackPressed());
         saveButton.setOnClickListener(v -> saveNote());
-        deleteButton.setOnClickListener(v -> confirmDelete());
+        pinButton.setOnClickListener(v -> togglePin());
+        moreButton.setOnClickListener(v -> showMoreMenu(v));
     }
 
     private void updateSaveButtonColor() {
         saveButton.setImageTintList(ColorStateList.valueOf(hasChanges ? activeColor : inactiveColor));
     }
 
+    private void updateSaveButtonVisibility() {
+        if (autoSaveEnabled) {
+            saveButton.setVisibility(View.GONE);
+        } else {
+            saveButton.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updatePinButton() {
+        pinButton.setImageResource(R.drawable.ic_pin_filled);
+        if (isPinned) {
+            pinButton.setColorFilter(activeColor);
+        } else {
+            pinButton.setColorFilter(inactiveColor);
+        }
+    }
+
     private void loadNote() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT title, note_text, date_text FROM notes WHERE _id=?", new String[]{String.valueOf(noteId)});
+        Cursor cursor = db.rawQuery("SELECT title, note_text, date_text, pinned FROM notes WHERE _id=?", new String[]{String.valueOf(noteId)});
         if (cursor.moveToFirst()) {
             titleEditText.setText(cursor.getString(0));
             noteEditText.setText(cursor.getString(1));
             dateText.setText("Last edited: " + cursor.getString(2));
             charCountText.setText(noteEditText.getText().length() + " characters");
+            isPinned = cursor.getInt(3) == 1;
         }
         cursor.close();
+        updatePinButton();
+    }
+
+    private void togglePin() {
+        isPinned = !isPinned;
+        updatePinButton();
+        if (noteId != -1) {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("pinned", isPinned ? 1 : 0);
+            db.update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+        }
+        Toast.makeText(this, isPinned ? "Note pinned" : "Note unpinned", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showMoreMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenuInflater().inflate(R.menu.note_menu, popup.getMenu());
+        
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_formatting) {
+                showFormattingDialog();
+                return true;
+            } else if (id == R.id.action_share) {
+                shareNote();
+                return true;
+            } else if (id == R.id.action_delete) {
+                if (noteId != -1) {
+                    ContentValues values = new ContentValues();
+                    values.put("deleted", 1);
+                    dbHelper.getWritableDatabase().update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+                }
+                Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(NoteActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+                return true;
+            }
+            return false;
+        });
+        
+        popup.show();
+    }
+
+    private void showFormattingDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_formatting, null);
+        
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.CustomDialogTheme)
+            .setView(dialogView)
+            .create();
+        
+        dialogView.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+        dialog.getWindow().setLayout((int)(340 * getResources().getDisplayMetrics().density), ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    private void shareNote() {
+        String title = titleEditText.getText().toString();
+        String text = noteEditText.getText().toString();
+        String shareContent = (title.isEmpty() ? "" : title + "\n\n") + text;
+        
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title.isEmpty() ? "Shared Note" : title);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareContent);
+        startActivity(Intent.createChooser(shareIntent, "Share note"));
+    }
+
+    private void autoSaveNote() {
+        String title = titleEditText.getText().toString().trim();
+        String text = noteEditText.getText().toString();
+        
+        if (title.isEmpty() && text.isEmpty()) {
+            return;
+        }
+        
+        long now = System.currentTimeMillis();
+        String date = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(new Date(now));
+        
+        ContentValues values = new ContentValues();
+        values.put("title", title);
+        values.put("note_text", text);
+        values.put("date_text", date);
+        values.put("pinned", isPinned ? 1 : 0);
+
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        if (noteId == -1) {
+            values.put("created_at", now);
+            values.put("modified_at", now);
+            noteId = db.insert("notes", null, values);
+            runOnUiThread(() -> {
+                TextView toolbarTitle = findViewById(R.id.toolbarTitle);
+                if (toolbarTitle != null) toolbarTitle.setText("Edit Note");
+                updateSaveButtonVisibility();
+            });
+        } else {
+            values.put("modified_at", now);
+            db.update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+        }
+        
+        hasChanges = false;
+        runOnUiThread(() -> {
+            dateText.setText("Last edited: " + date);
+            updateSaveButtonColor();
+        });
     }
 
     @Override
     public void onBackPressed() {
-        if (hasChanges) {
+        autoSaveHandler.removeCallbacks(autoSaveRunnable);
+        
+        if (hasChanges && autoSaveEnabled) {
+            autoSaveNote();
+            Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
+            finish();
+        } else if (hasChanges) {
             View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_unsaved, null);
             
             AlertDialog dialog = new AlertDialog.Builder(this, R.style.CustomDialogTheme)
@@ -155,53 +323,35 @@ public class NoteActivity extends AppCompatActivity {
     }
 
     private void saveNote() {
-        String title = titleEditText.getText().toString().trim();
-        String text = noteEditText.getText().toString();
-        
-        if (title.isEmpty() && text.isEmpty()) {
-            Toast.makeText(this, "Note is empty", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        long now = System.currentTimeMillis();
-        String date = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(new Date(now));
-        
-        ContentValues values = new ContentValues();
-        values.put("title", title);
-        values.put("note_text", text);
-        values.put("date_text", date);
-
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        if (noteId == -1) {
-            values.put("created_at", now);
-            values.put("modified_at", now);
-            noteId = db.insert("notes", null, values);
-        } else {
-            values.put("modified_at", now);
-            db.update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
-        }
-        
+        autoSaveHandler.removeCallbacks(autoSaveRunnable);
+        autoSaveNote();
         Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
-        hasChanges = false;
         finish();
     }
 
-    private void confirmDelete() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete, null);
-        
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.CustomDialogTheme)
-            .setView(dialogView)
-            .create();
-        
-        dialogView.findViewById(R.id.btnDelete).setOnClickListener(v -> {
-            dbHelper.getWritableDatabase().delete("notes", "_id=?", new String[]{String.valueOf(noteId)});
-            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-            finish();
-        });
-        
-        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
-        
-        dialog.show();
-        dialog.getWindow().setLayout((int)(340 * getResources().getDisplayMetrics().density), ViewGroup.LayoutParams.WRAP_CONTENT);
+    private void applyHandleTint(EditText editText, int color) {
+        Drawable handleLeft = editText.getTextSelectHandleLeft();
+        if (handleLeft != null) {
+            handleLeft.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            editText.setTextSelectHandleLeft(handleLeft);
+        }
+        Drawable handleRight = editText.getTextSelectHandleRight();
+        if (handleRight != null) {
+            handleRight.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            editText.setTextSelectHandleRight(handleRight);
+        }
+        Drawable handle = editText.getTextSelectHandle();
+        if (handle != null) {
+            handle.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            editText.setTextSelectHandle(handle);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (autoSaveHandler != null && autoSaveRunnable != null) {
+            autoSaveHandler.removeCallbacks(autoSaveRunnable);
+        }
     }
 }

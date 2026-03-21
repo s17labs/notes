@@ -1,5 +1,6 @@
 package com.s17labs.notesapp;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Typeface;
@@ -10,11 +11,13 @@ import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +33,13 @@ public class NotePreviewActivity extends AppCompatActivity {
     private TextView titleText;
     private TextView noteText;
     private TextView dateText;
+    private ImageButton pinButton;
+    private ImageButton editButton;
+    private ImageButton moreButton;
+    private ImageButton restoreButton;
+    private ImageButton deleteForeverButton;
+    private boolean isPinned = false;
+    private boolean isTrashView = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,14 +50,20 @@ public class NotePreviewActivity extends AppCompatActivity {
         noteText = findViewById(R.id.noteText);
         dateText = findViewById(R.id.dateText);
         ImageButton backButton = findViewById(R.id.backButton);
-        ImageButton editButton = findViewById(R.id.editButton);
-        ImageButton deleteButton = findViewById(R.id.deleteButton);
+        editButton = findViewById(R.id.editButton);
+        pinButton = findViewById(R.id.pinButton);
+        moreButton = findViewById(R.id.moreButton);
+        restoreButton = findViewById(R.id.restoreButton);
+        deleteForeverButton = findViewById(R.id.deleteForeverButton);
 
         noteId = getIntent().getLongExtra("NOTE_ID", -1);
+        isTrashView = getIntent().getBooleanExtra("IS_TRASH_VIEW", false);
 
         if (noteId != -1) {
             loadNote();
         }
+
+        updateUIForTrashView();
 
         backButton.setOnClickListener(v -> finish());
 
@@ -57,7 +73,13 @@ public class NotePreviewActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        deleteButton.setOnClickListener(v -> confirmDelete());
+        pinButton.setOnClickListener(v -> togglePin());
+
+        moreButton.setOnClickListener(v -> showMoreMenu(v));
+
+        restoreButton.setOnClickListener(v -> restoreNote());
+
+        deleteForeverButton.setOnClickListener(v -> confirmPermanentDelete());
 
         noteText.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -73,6 +95,57 @@ public class NotePreviewActivity extends AppCompatActivity {
         });
     }
 
+    private void updateUIForTrashView() {
+        if (isTrashView) {
+            editButton.setVisibility(View.GONE);
+            pinButton.setVisibility(View.GONE);
+            moreButton.setVisibility(View.GONE);
+            restoreButton.setVisibility(View.VISIBLE);
+            deleteForeverButton.setVisibility(View.VISIBLE);
+        } else {
+            editButton.setVisibility(View.VISIBLE);
+            pinButton.setVisibility(View.VISIBLE);
+            moreButton.setVisibility(View.VISIBLE);
+            restoreButton.setVisibility(View.GONE);
+            deleteForeverButton.setVisibility(View.GONE);
+        }
+    }
+
+    private void restoreNote() {
+        NoteDbHelper dbHelper = new NoteDbHelper(this);
+        android.database.sqlite.SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("deleted", 0);
+        db.update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+        Toast.makeText(this, "Note restored", Toast.LENGTH_SHORT).show();
+        finish();
+    }
+
+    private void confirmPermanentDelete() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete, null);
+        
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.CustomDialogTheme)
+            .setView(dialogView)
+            .create();
+        
+        TextView titleText = dialogView.findViewById(R.id.deleteTitle);
+        titleText.setText("Delete Forever?");
+        TextView messageText = dialogView.findViewById(R.id.deleteMessage);
+        messageText.setText("This note will be permanently deleted and cannot be recovered.");
+        
+        dialogView.findViewById(R.id.btnDelete).setOnClickListener(v -> {
+            NoteDbHelper dbHelper = new NoteDbHelper(this);
+            dbHelper.getWritableDatabase().delete("notes", "_id=?", new String[]{String.valueOf(noteId)});
+            Toast.makeText(this, "Note deleted permanently", Toast.LENGTH_SHORT).show();
+            finish();
+        });
+        
+        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+        dialog.getWindow().setLayout((int)(340 * getResources().getDisplayMetrics().density), ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -84,17 +157,92 @@ public class NotePreviewActivity extends AppCompatActivity {
     private void loadNote() {
         NoteDbHelper dbHelper = new NoteDbHelper(this);
         android.database.sqlite.SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT title, note_text, date_text FROM notes WHERE _id=?", new String[]{String.valueOf(noteId)});
+        Cursor cursor = db.rawQuery("SELECT title, note_text, date_text, pinned FROM notes WHERE _id=?", new String[]{String.valueOf(noteId)});
         if (cursor.moveToFirst()) {
             String title = cursor.getString(0);
             String noteTextContent = cursor.getString(1);
             String date = cursor.getString(2);
-            
+            isPinned = cursor.getInt(3) == 1;
+
             titleText.setText(title);
             dateText.setText("Last edited: " + date);
             noteText.setText(parseMarkdown(noteTextContent));
+
+            updatePinButton();
         }
         cursor.close();
+    }
+
+    private void updatePinButton() {
+        pinButton.setImageResource(R.drawable.ic_pin_filled);
+        if (isPinned) {
+            pinButton.setColorFilter(getResources().getColor(R.color.colorAccent, getTheme()));
+        } else {
+            pinButton.setColorFilter(getResources().getColor(R.color.textSecondary, getTheme()));
+        }
+    }
+
+    private void togglePin() {
+        NoteDbHelper dbHelper = new NoteDbHelper(this);
+        android.database.sqlite.SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("pinned", isPinned ? 0 : 1);
+        db.update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+        isPinned = !isPinned;
+        updatePinButton();
+        Toast.makeText(this, isPinned ? "Note pinned" : "Note unpinned", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showMoreMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenuInflater().inflate(R.menu.note_menu, popup.getMenu());
+        
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_formatting) {
+                showFormattingDialog();
+                return true;
+            } else if (id == R.id.action_share) {
+                shareNote();
+                return true;
+            } else if (id == R.id.action_delete) {
+                NoteDbHelper dbHelper = new NoteDbHelper(this);
+                ContentValues values = new ContentValues();
+                values.put("deleted", 1);
+                dbHelper.getWritableDatabase().update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+                Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
+                finish();
+                return true;
+            }
+            return false;
+        });
+        
+        popup.show();
+    }
+
+    private void showFormattingDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_formatting, null);
+        
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.CustomDialogTheme)
+            .setView(dialogView)
+            .create();
+        
+        dialogView.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+        dialog.getWindow().setLayout((int)(340 * getResources().getDisplayMetrics().density), ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    private void shareNote() {
+        String title = titleText.getText().toString();
+        String text = noteText.getText().toString();
+        String shareContent = (title.isEmpty() ? "" : title + "\n\n") + text;
+        
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title.isEmpty() ? "Shared Note" : title);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareContent);
+        startActivity(Intent.createChooser(shareIntent, "Share note"));
     }
 
     private boolean checkForLinkClickAt(int offset) {
@@ -139,26 +287,6 @@ public class NotePreviewActivity extends AppCompatActivity {
             startActivity(intent);
             dialog.dismiss();
         });
-        
-        dialog.show();
-        dialog.getWindow().setLayout((int)(340 * getResources().getDisplayMetrics().density), ViewGroup.LayoutParams.WRAP_CONTENT);
-    }
-
-    private void confirmDelete() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete, null);
-        
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.CustomDialogTheme)
-            .setView(dialogView)
-            .create();
-        
-        dialogView.findViewById(R.id.btnDelete).setOnClickListener(v -> {
-            NoteDbHelper dbHelper = new NoteDbHelper(this);
-            dbHelper.getWritableDatabase().delete("notes", "_id=?", new String[]{String.valueOf(noteId)});
-            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-            finish();
-        });
-        
-        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
         
         dialog.show();
         dialog.getWindow().setLayout((int)(340 * getResources().getDisplayMetrics().density), ViewGroup.LayoutParams.WRAP_CONTENT);

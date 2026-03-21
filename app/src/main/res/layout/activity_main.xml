@@ -1,107 +1,150 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <LinearLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/background"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="8dp">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingStart="8dp"
-                android:text="Notes"
-                android:textColor="@color/textPrimary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/background"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="8dp">
 
-            <ImageButton
-                android:id="@+id/sortButton"
-                android:layout_width="48dp"
+                <ImageButton
+                    android:id="@+id/menuButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Menu"
+                    android:src="@drawable/ic_menu"
+                    app:tint="@color/textPrimary" />
+
+                <TextView
+                    android:id="@+id/toolbarTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingStart="8dp"
+                    android:text="Notes"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/sortButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Sort"
+                    android:src="@drawable/ic_sort"
+                    app:tint="@color/textPrimary" />
+
+                <ImageButton
+                    android:id="@+id/moreButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="More"
+                    android:src="@drawable/ic_more_vert"
+                    android:visibility="gone"
+                    app:tint="@color/textPrimary" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/searchContainer"
+                android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Sort"
-                android:src="@drawable/ic_sort" />
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="8dp">
+
+                <EditText
+                    android:id="@+id/searchEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/search_background"
+                    android:drawableStart="@drawable/ic_search"
+                    android:drawablePadding="8dp"
+                    android:hint="Search notes..."
+                    android:inputType="text"
+                    android:paddingHorizontal="12dp"
+                    android:paddingEnd="48dp"
+                    android:textColor="@color/textPrimary"
+                    android:textColorHint="@color/textSecondary"
+                    android:textSize="14sp"
+                    android:textCursorDrawable="@drawable/cursor_drawable"
+                    android:textColorHighlight="@color/colorAccentSemiTransparent" />
+
+                <ImageButton
+                    android:id="@+id/clearButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="end"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Clear search"
+                    android:src="@drawable/ic_clear"
+                    android:tint="@color/textSecondary"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/notesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingHorizontal="12dp"
+                android:paddingBottom="12dp" />
 
         </LinearLayout>
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="8dp">
+        <TextView
+            android:id="@+id/emptyView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="No notes yet.\nTap + to create one!"
+            android:textAlignment="center"
+            android:textColor="@color/textSecondary"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
-            <EditText
-                android:id="@+id/searchEditText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/search_background"
-                android:drawableStart="@drawable/ic_search"
-                android:drawablePadding="8dp"
-                android:hint="Search notes..."
-                android:inputType="text"
-                android:paddingHorizontal="12dp"
-                android:paddingEnd="48dp"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
-                android:textSize="14sp" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:contentDescription="Add note"
+            app:srcCompat="@drawable/ic_add"
+            app:tint="@android:color/white"
+            app:backgroundTint="@color/colorAccent" />
 
-            <ImageButton
-                android:id="@+id/clearButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="end"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Clear search"
-                android:src="@drawable/ic_clear"
-                android:tint="@color/textSecondary"
-                android:visibility="gone" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-        </FrameLayout>
-
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/notesRecyclerView"
-        android:layout_width="match_parent"
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_marginTop="100dp"
-        android:clipToPadding="false"
-        android:padding="12dp" />
+        android:layout_gravity="start"
+        android:background="@color/background"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu"
+        app:itemTextColor="@color/textPrimary"
+        app:itemIconTint="@color/textPrimary" />
 
-    <TextView
-        android:id="@+id/emptyView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="No notes yet.\nTap + to create one!"
-        android:textAlignment="center"
-        android:textColor="@color/textSecondary"
-        android:textSize="16sp"
-        android:visibility="gone" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Add note"
-        app:srcCompat="@drawable/ic_add"
-        app:tint="@android:color/white"
-        app:backgroundTint="@color/colorAccent" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

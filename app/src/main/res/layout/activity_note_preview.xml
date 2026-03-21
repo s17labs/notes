@@ -38,27 +38,58 @@
                 android:textStyle="bold" />
 
             <ImageButton
-                android:id="@+id/deleteButton"
+                android:id="@+id/pinButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Delete"
-                android:src="@drawable/ic_delete"
+                android:contentDescription="Pin"
+                android:src="@drawable/ic_pin_filled"
                 app:tint="@color/textSecondary" />
 
             <ImageButton
                 android:id="@+id/editButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginEnd="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Edit"
                 android:src="@drawable/ic_edit"
                 app:tint="@color/colorAccent" />
 
+            <ImageButton
+                android:id="@+id/moreButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="More"
+                android:src="@drawable/ic_more_vert"
+                app:tint="@color/textSecondary" />
+
+            <ImageButton
+                android:id="@+id/restoreButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Restore"
+                android:src="@drawable/ic_restore"
+                android:visibility="gone"
+                app:tint="@color/textPrimary" />
+
+            <ImageButton
+                android:id="@+id/deleteForeverButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Delete Forever"
+                android:src="@drawable/ic_delete"
+                android:visibility="gone"
+                app:tint="@color/textSecondary" />
+
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/noteCard"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -101,7 +132,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="@color/divider" />
+                        android:background="@color/background" />
 
                     <TextView
                         android:id="@+id/noteText"
