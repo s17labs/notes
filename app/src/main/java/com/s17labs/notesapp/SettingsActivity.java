@@ -82,19 +82,31 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateSwitchUI() {
+        float density = getResources().getDisplayMetrics().density;
+        int startMargin = (int) (8 * density);
+        int endMargin = (int) (20 * density);
+        
         if (isAutoSaveOn) {
             autoSaveSwitch.setBackgroundResource(R.drawable.switch_track_on);
             switchThumb.setImageResource(R.drawable.switch_circle_on);
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) switchThumb.getLayoutParams();
-            params.leftMargin = (int) (20 * getResources().getDisplayMetrics().density);
-            switchThumb.setLayoutParams(params);
         } else {
             autoSaveSwitch.setBackgroundResource(R.drawable.switch_track_off);
             switchThumb.setImageResource(R.drawable.switch_circle_off);
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) switchThumb.getLayoutParams();
-            params.leftMargin = (int) (8 * getResources().getDisplayMetrics().density);
-            switchThumb.setLayoutParams(params);
         }
+        
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) switchThumb.getLayoutParams();
+        int currentMargin = params.leftMargin;
+        int targetMargin = isAutoSaveOn ? endMargin : startMargin;
+        
+        android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(currentMargin, targetMargin);
+        animator.setDuration(150);
+        animator.addUpdateListener(animation -> {
+            int value = (int) animation.getAnimatedValue();
+            LinearLayout.LayoutParams p = (LinearLayout.LayoutParams) switchThumb.getLayoutParams();
+            p.leftMargin = value;
+            switchThumb.setLayoutParams(p);
+        });
+        animator.start();
     }
 
     private void showImportDialog() {
