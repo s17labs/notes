@@ -44,6 +44,15 @@
                     android:textStyle="bold" />
 
                 <ImageButton
+                    android:id="@+id/viewModeButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Toggle view mode"
+                    android:src="@drawable/ic_grid_view"
+                    app:tint="@color/textPrimary" />
+
+                <ImageButton
                     android:id="@+id/sortButton"
                     android:layout_width="48dp"
                     android:layout_height="48dp"

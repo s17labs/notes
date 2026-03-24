@@ -87,6 +87,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return cursor != null ? cursor.getCount() : 0;
     }
 
+    public Cursor getCursor() {
+        return cursor;
+    }
+
     static class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView noteTitle;
         TextView noteText;

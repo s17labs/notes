@@ -63,7 +63,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="More"
                 android:src="@drawable/ic_more_vert"
-                app:tint="@color/textSecondary" />
+                app:tint="@color/textPrimary" />
 
             <ImageButton
                 android:id="@+id/restoreButton"
@@ -84,7 +84,7 @@
                 android:contentDescription="Delete Forever"
                 android:src="@drawable/ic_delete"
                 android:visibility="gone"
-                app:tint="@color/textSecondary" />
+                app:tint="@color/colorAccent" />
 
         </LinearLayout>
 

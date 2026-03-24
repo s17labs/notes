@@ -18,8 +18,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,6 +44,57 @@ public class NotePreviewActivity extends AppCompatActivity {
     private ImageButton deleteForeverButton;
     private boolean isPinned = false;
     private boolean isTrashView = false;
+    private PopupWindow tooltipPopup;
+    private Timer tooltipTimer;
+
+    private void showTooltip(View anchor, String text) {
+        if (tooltipPopup != null && tooltipPopup.isShowing()) {
+            tooltipPopup.dismiss();
+        }
+        if (tooltipTimer != null) {
+            tooltipTimer.cancel();
+        }
+
+        TextView tooltipView = new TextView(this);
+        tooltipView.setText(text);
+        tooltipView.setTextColor(getResources().getColor(R.color.textPrimary, getTheme()));
+        tooltipView.setBackgroundColor(getResources().getColor(R.color.surface, getTheme()));
+        tooltipView.setPadding(24, 16, 24, 16);
+        tooltipView.setTextSize(14);
+        tooltipView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int tooltipWidth = tooltipView.getMeasuredWidth();
+        int tooltipHeight = tooltipView.getMeasuredHeight();
+
+        tooltipPopup = new PopupWindow(tooltipView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, false);
+        tooltipPopup.setBackgroundDrawable(null);
+        tooltipPopup.setOutsideTouchable(true);
+
+        int[] location = new int[2];
+        anchor.getLocationOnScreen(location);
+        int anchorCenterX = location[0] + anchor.getWidth() / 2;
+        int anchorTop = location[1];
+        int anchorBottom = location[1] + anchor.getHeight();
+
+        int displayHeight = getResources().getDisplayMetrics().heightPixels;
+        boolean showBelow = (anchorBottom + tooltipHeight + 20) <= displayHeight;
+
+        int x = anchorCenterX - tooltipWidth / 2;
+        int y = showBelow ? anchorBottom + 10 : anchorTop - tooltipHeight - 10;
+
+        tooltipPopup.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y);
+
+        tooltipTimer = new Timer();
+        tooltipTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(() -> {
+                    if (tooltipPopup != null && tooltipPopup.isShowing()) {
+                        tooltipPopup.dismiss();
+                    }
+                });
+            }
+        }, 2000);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,20 +121,44 @@ public class NotePreviewActivity extends AppCompatActivity {
         updateUIForTrashView();
 
         backButton.setOnClickListener(v -> finish());
+        backButton.setOnLongClickListener(v -> {
+            showTooltip(backButton, "Go back");
+            return true;
+        });
 
         editButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, NoteActivity.class);
             intent.putExtra("NOTE_ID", noteId);
             startActivity(intent);
         });
+        editButton.setOnLongClickListener(v -> {
+            showTooltip(editButton, "Edit note");
+            return true;
+        });
 
         pinButton.setOnClickListener(v -> togglePin());
+        pinButton.setOnLongClickListener(v -> {
+            showTooltip(pinButton, isPinned ? "Unpin note" : "Pin note");
+            return true;
+        });
 
         moreButton.setOnClickListener(v -> showMoreMenu(v));
+        moreButton.setOnLongClickListener(v -> {
+            showTooltip(moreButton, "More options");
+            return true;
+        });
 
         restoreButton.setOnClickListener(v -> restoreNote());
+        restoreButton.setOnLongClickListener(v -> {
+            showTooltip(restoreButton, "Restore note");
+            return true;
+        });
 
         deleteForeverButton.setOnClickListener(v -> confirmPermanentDelete());
+        deleteForeverButton.setOnLongClickListener(v -> {
+            showTooltip(deleteForeverButton, "Delete forever");
+            return true;
+        });
 
         noteText.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {

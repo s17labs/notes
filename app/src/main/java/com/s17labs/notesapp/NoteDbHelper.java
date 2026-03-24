@@ -11,6 +11,7 @@ public class NoteDbHelper extends SQLiteOpenHelper {
 
     public static final String PREFS_NAME = "NotesAppPrefs";
     public static final String PREF_AUTO_SAVE = "auto_save";
+    public static final String PREF_GRID_VIEW = "grid_view";
 
     public NoteDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -49,5 +50,15 @@ public class NoteDbHelper extends SQLiteOpenHelper {
     public static void setAutoSaveEnabled(Context context, boolean enabled) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         prefs.edit().putBoolean(PREF_AUTO_SAVE, enabled).apply();
+    }
+
+    public static boolean isGridView(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(PREF_GRID_VIEW, false);
+    }
+
+    public static void setGridView(Context context, boolean isGrid) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(PREF_GRID_VIEW, isGrid).apply();
     }
 }

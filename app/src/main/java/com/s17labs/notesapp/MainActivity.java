@@ -28,9 +28,13 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -49,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
     private ImageButton sortButton;
     private ImageButton menuButton;
     private ImageButton moreButton;
+    private ImageButton viewModeButton;
+    private boolean isGridView;
     private TextView toolbarTitle;
     private FrameLayout searchContainer;
     private DrawerLayout drawerLayout;
@@ -66,6 +72,57 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
     private static final int VIEW_NOTES = 0;
     private static final int VIEW_PINNED = 1;
     private static final int VIEW_TRASH = 2;
+    private PopupWindow tooltipPopup;
+    private Timer tooltipTimer;
+
+    private void showTooltip(View anchor, String text) {
+        if (tooltipPopup != null && tooltipPopup.isShowing()) {
+            tooltipPopup.dismiss();
+        }
+        if (tooltipTimer != null) {
+            tooltipTimer.cancel();
+        }
+
+        TextView tooltipView = new TextView(this);
+        tooltipView.setText(text);
+        tooltipView.setTextColor(getResources().getColor(R.color.textPrimary, getTheme()));
+        tooltipView.setBackgroundColor(getResources().getColor(R.color.surface, getTheme()));
+        tooltipView.setPadding(24, 16, 24, 16);
+        tooltipView.setTextSize(14);
+        tooltipView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int tooltipWidth = tooltipView.getMeasuredWidth();
+        int tooltipHeight = tooltipView.getMeasuredHeight();
+
+        tooltipPopup = new PopupWindow(tooltipView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, false);
+        tooltipPopup.setBackgroundDrawable(null);
+        tooltipPopup.setOutsideTouchable(true);
+
+        int[] location = new int[2];
+        anchor.getLocationOnScreen(location);
+        int anchorCenterX = location[0] + anchor.getWidth() / 2;
+        int anchorTop = location[1];
+        int anchorBottom = location[1] + anchor.getHeight();
+
+        int displayHeight = getResources().getDisplayMetrics().heightPixels;
+        boolean showBelow = (anchorBottom + tooltipHeight + 20) <= displayHeight;
+
+        int x = anchorCenterX - tooltipWidth / 2;
+        int y = showBelow ? anchorBottom + 10 : anchorTop - tooltipHeight - 10;
+
+        tooltipPopup.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y);
+
+        tooltipTimer = new Timer();
+        tooltipTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(() -> {
+                    if (tooltipPopup != null && tooltipPopup.isShowing()) {
+                        tooltipPopup.dismiss();
+                    }
+                });
+            }
+        }, 2000);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +137,12 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         menuButton = findViewById(R.id.menuButton);
         toolbarTitle = findViewById(R.id.toolbarTitle);
         recyclerView = findViewById(R.id.notesRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        isGridView = NoteDbHelper.isGridView(this);
+        if (isGridView) {
+            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        } else {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        }
         searchContainer = findViewById(R.id.searchContainer);
         
         fab = findViewById(R.id.fab);
@@ -116,9 +178,32 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         clearButton = findViewById(R.id.clearButton);
         sortButton = findViewById(R.id.sortButton);
         moreButton = findViewById(R.id.moreButton);
+        viewModeButton = findViewById(R.id.viewModeButton);
+        viewModeButton.setImageResource(isGridView ? R.drawable.ic_list_view : R.drawable.ic_grid_view);
+        
+        sortButton.setOnLongClickListener(v -> {
+            showTooltip(sortButton, "Sort");
+            return true;
+        });
+        viewModeButton.setOnLongClickListener(v -> {
+            showTooltip(viewModeButton, isGridView ? "Single column view" : "Multi-column view");
+            return true;
+        });
+        moreButton.setOnLongClickListener(v -> {
+            showTooltip(moreButton, "More options");
+            return true;
+        });
+        fab.setOnLongClickListener(v -> {
+            showTooltip(fab, "Create new note");
+            return true;
+        });
         
         menuButton.setOnClickListener(v -> {
             drawerLayout.openDrawer(GravityCompat.START);
+        });
+        menuButton.setOnLongClickListener(v -> {
+            showTooltip(menuButton, "Menu");
+            return true;
         });
 
         navigationView.setNavigationItemSelectedListener(item -> {
@@ -160,8 +245,14 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             hideKeyboard();
             loadNotes("");
         });
+        clearButton.setOnLongClickListener(v -> {
+            showTooltip(clearButton, "Clear search");
+            return true;
+        });
 
         sortButton.setOnClickListener(this::showSortMenu);
+        
+        viewModeButton.setOnClickListener(v -> toggleViewMode());
         
         moreButton.setOnClickListener(this::showMoreMenu);
     }
@@ -172,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
                 toolbarTitle.setText("Notes");
                 searchContainer.setVisibility(View.VISIBLE);
                 sortButton.setVisibility(View.VISIBLE);
+                viewModeButton.setVisibility(View.VISIBLE);
                 moreButton.setVisibility(View.GONE);
                 fab.show();
                 break;
@@ -179,6 +271,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
                 toolbarTitle.setText("Pinned Notes");
                 searchContainer.setVisibility(View.VISIBLE);
                 sortButton.setVisibility(View.VISIBLE);
+                viewModeButton.setVisibility(View.VISIBLE);
                 moreButton.setVisibility(View.GONE);
                 fab.hide();
                 break;
@@ -186,10 +279,27 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
                 toolbarTitle.setText("Trash");
                 searchContainer.setVisibility(View.GONE);
                 sortButton.setVisibility(View.GONE);
+                viewModeButton.setVisibility(View.GONE);
                 moreButton.setVisibility(View.VISIBLE);
                 fab.hide();
                 break;
         }
+    }
+
+    private void toggleViewMode() {
+        isGridView = !isGridView;
+        NoteDbHelper.setGridView(this, isGridView);
+        viewModeButton.setImageResource(isGridView ? R.drawable.ic_list_view : R.drawable.ic_grid_view);
+        updateLayoutManager();
+    }
+
+    private void updateLayoutManager() {
+        if (isGridView) {
+            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        } else {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        }
+        loadNotes(searchEditText.getText().toString());
     }
     
     private void showMoreMenu(View anchor) {
@@ -488,6 +598,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             isPinned = cursor.getInt(0) == 1;
         }
         cursor.close();
+        final boolean pinned = isPinned;
         
         TextView txtPin = dialogView.findViewById(R.id.txtPin);
         View btnEdit = dialogView.findViewById(R.id.btnEdit);
@@ -517,20 +628,55 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             intent.putExtra("NOTE_ID", noteId);
             startActivity(intent);
         });
+        dialogView.findViewById(R.id.btnEdit).setOnLongClickListener(v -> {
+            showTooltip(btnEdit, "Edit note");
+            return true;
+        });
+        dialogView.findViewById(R.id.btnPin).setOnLongClickListener(v -> {
+            showTooltip(btnPin, pinned ? "Unpin note" : "Pin note");
+            return true;
+        });
+        
+        dialogView.findViewById(R.id.btnShare).setOnLongClickListener(v -> {
+            showTooltip(btnShare, "Share note");
+            return true;
+        });
+
+        dialogView.findViewById(R.id.btnRestore).setOnLongClickListener(v -> {
+            showTooltip(btnRestore, "Restore note");
+            return true;
+        });
+        
+        dialogView.findViewById(R.id.btnDelete).setOnLongClickListener(v -> {
+            showTooltip(dialogView.findViewById(R.id.btnDelete), currentView == VIEW_TRASH ? "Delete forever" : "Move to trash");
+            return true;
+        });
         
         dialogView.findViewById(R.id.btnPin).setOnClickListener(v -> {
             togglePin(noteId);
             dialog.dismiss();
+        });
+        dialogView.findViewById(R.id.btnPin).setOnLongClickListener(v -> {
+            Toast.makeText(this, pinned ? "Unpin note" : "Pin note", Toast.LENGTH_SHORT).show();
+            return true;
         });
         
         dialogView.findViewById(R.id.btnShare).setOnClickListener(v -> {
             shareNote(noteId);
             dialog.dismiss();
         });
+        dialogView.findViewById(R.id.btnShare).setOnLongClickListener(v -> {
+            Toast.makeText(this, "Share note", Toast.LENGTH_SHORT).show();
+            return true;
+        });
 
         dialogView.findViewById(R.id.btnRestore).setOnClickListener(v -> {
             restoreNote(noteId);
             dialog.dismiss();
+        });
+        dialogView.findViewById(R.id.btnRestore).setOnLongClickListener(v -> {
+            Toast.makeText(this, "Restore note", Toast.LENGTH_SHORT).show();
+            return true;
         });
         
         dialogView.findViewById(R.id.btnDelete).setOnClickListener(v -> {
@@ -544,6 +690,10 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
                 Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
                 loadNotes(searchEditText.getText().toString());
             }
+        });
+        dialogView.findViewById(R.id.btnDelete).setOnLongClickListener(v -> {
+            Toast.makeText(this, currentView == VIEW_TRASH ? "Delete forever" : "Move to trash", Toast.LENGTH_SHORT).show();
+            return true;
         });
 
         dialog.show();

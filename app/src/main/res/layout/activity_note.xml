@@ -63,7 +63,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="More"
                 android:src="@drawable/ic_more_vert"
-                app:tint="@color/textSecondary" />
+                app:tint="@color/textPrimary" />
 
         </LinearLayout>
 
