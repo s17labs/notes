@@ -20,6 +20,11 @@
 
     <group android:id="@+id/group_bottom">
         <item
+            android:id="@+id/nav_board"
+            android:icon="@drawable/ic_board_view"
+            android:title="Board" />
+
+        <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
             android:title="Settings" />

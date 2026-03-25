@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Board Options"
+        android:textColor="@color/textPrimary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:padding="20dp"
+        android:paddingBottom="8dp" />
+
+    <TextView
+        android:id="@+id/btnSavePreset"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Save as Preset"
+        android:textColor="@color/textPrimary"
+        android:textSize="14sp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="?attr/selectableItemBackground" />
+
+    <TextView
+        android:id="@+id/btnLoadPreset"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Load Preset"
+        android:textColor="@color/textPrimary"
+        android:textSize="14sp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="?attr/selectableItemBackground" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider" />
+
+    <TextView
+        android:id="@+id/btnResetDefault"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Reset to Default"
+        android:textColor="@android:color/holo_red_light"
+        android:textSize="14sp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="?attr/selectableItemBackground" />
+
+</LinearLayout>

@@ -224,6 +224,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class));
             } else if (id == R.id.nav_about) {
                 startActivity(new Intent(MainActivity.this, AboutActivity.class));
+            } else if (id == R.id.nav_board) {
+                startActivity(new Intent(MainActivity.this, BoardActivity.class));
             }
             drawerLayout.closeDrawers();
             return true;

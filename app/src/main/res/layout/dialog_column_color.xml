@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Column Color"
+        android:textColor="@color/textPrimary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <View
+            android:id="@+id/colorRed"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#FF4136"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/colorOrange"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#FF851B"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/colorYellow"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#FFDC00"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/colorGreen"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#2ECC40"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <View
+            android:id="@+id/colorTeal"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#39CCCC"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/colorBlue"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#0074D9"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/colorPurple"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#B10DC9"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/colorGray"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="#6B6B6B"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/checkboxCompleted"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mark as completed"
+        android:textColor="@color/textPrimary"
+        android:buttonTint="@color/colorAccent"
+        android:layout_marginTop="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:text="Cancel"
+            android:textColor="@color/textPrimary"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+</LinearLayout>
