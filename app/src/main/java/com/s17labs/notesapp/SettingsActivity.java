@@ -144,27 +144,57 @@ public class SettingsActivity extends AppCompatActivity {
             inputStream.close();
 
             String content = new String(buffer, StandardCharsets.UTF_8);
-            JSONArray notesArray = new JSONArray(content);
+            JSONArray rootArray = new JSONArray(content);
+
+            JSONObject backup;
+            if (rootArray.length() > 0 && rootArray.getJSONObject(0).has("notes")) {
+                backup = rootArray.getJSONObject(0);
+            } else {
+                backup = new JSONObject();
+                backup.put("notes", rootArray);
+            }
+
+            JSONArray notesArray = backup.optJSONArray("notes");
+            if (notesArray == null) {
+                notesArray = rootArray;
+            }
 
             NoteDbHelper dbHelper = new NoteDbHelper(this);
             android.database.sqlite.SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-            int imported = 0;
-            for (int i = 0; i < notesArray.length(); i++) {
-                JSONObject note = notesArray.getJSONObject(i);
-                android.content.ContentValues values = new android.content.ContentValues();
-                values.put("title", note.optString("title", ""));
-                values.put("note_text", note.optString("note_text", ""));
-                values.put("date_text", note.optString("date_text", ""));
-                values.put("created_at", note.optLong("created_at", System.currentTimeMillis()));
-                values.put("modified_at", note.optLong("modified_at", System.currentTimeMillis()));
-                values.put("pinned", note.optInt("pinned", 0));
-                values.put("color", note.optInt("color", 0));
-                db.insert("notes", null, values);
-                imported++;
+            int importedNotes = 0;
+            if (notesArray != null) {
+                for (int i = 0; i < notesArray.length(); i++) {
+                    JSONObject note = notesArray.getJSONObject(i);
+                    android.content.ContentValues values = new android.content.ContentValues();
+                    values.put("title", note.optString("title", ""));
+                    values.put("note_text", note.optString("note_text", ""));
+                    values.put("date_text", note.optString("date_text", ""));
+                    values.put("created_at", note.optLong("created_at", System.currentTimeMillis()));
+                    values.put("modified_at", note.optLong("modified_at", System.currentTimeMillis()));
+                    values.put("pinned", note.optInt("pinned", 0));
+                    values.put("color", note.optInt("color", 0));
+                    db.insert("notes", null, values);
+                    importedNotes++;
+                }
             }
 
-            Toast.makeText(this, "Imported " + imported + " notes", Toast.LENGTH_SHORT).show();
+            JSONArray boardColumnsArray = backup.optJSONArray("board_columns");
+            if (boardColumnsArray != null) {
+                NoteDbHelper.importBoardColumns(this, boardColumnsArray);
+            }
+
+            JSONArray boardItemsArray = backup.optJSONArray("board_items");
+            if (boardItemsArray != null) {
+                NoteDbHelper.importBoardItems(db, boardItemsArray);
+            }
+
+            JSONArray boardPresetsArray = backup.optJSONArray("board_presets");
+            if (boardPresetsArray != null) {
+                NoteDbHelper.importBoardPresets(this, boardPresetsArray);
+            }
+
+            Toast.makeText(this, "Imported " + importedNotes + " notes", Toast.LENGTH_SHORT).show();
 
         } catch (Exception e) {
             Toast.makeText(this, "Import failed: Invalid file format", Toast.LENGTH_SHORT).show();
@@ -195,7 +225,18 @@ public class SettingsActivity extends AppCompatActivity {
             }
             cursor.close();
 
-            pendingExportData = notesArray;
+            JSONArray boardColumnsArray = NoteDbHelper.exportBoardColumns(this);
+            JSONArray boardItemsArray = NoteDbHelper.exportBoardItems(db);
+            JSONArray boardPresetsArray = NoteDbHelper.exportBoardPresets(this);
+
+            JSONObject backup = new JSONObject();
+            backup.put("notes", notesArray);
+            backup.put("board_columns", boardColumnsArray);
+            backup.put("board_items", boardItemsArray);
+            backup.put("board_presets", boardPresetsArray);
+
+            pendingExportData = new JSONArray();
+            pendingExportData.put(backup);
 
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
             pendingExportFileName = "notes_backup_" + timestamp + ".json";

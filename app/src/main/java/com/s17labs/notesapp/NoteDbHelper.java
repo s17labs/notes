@@ -7,6 +7,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class NoteDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "notes.db";
     private static final int DATABASE_VERSION = 8;
@@ -164,5 +167,86 @@ public class NoteDbHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put("completed", completed);
         db.update("notes", values, "_id=?", new String[]{String.valueOf(noteId)});
+    }
+
+    public static JSONArray exportBoardColumns(Context context) {
+        JSONArray columnsArray = new JSONArray();
+        try {
+            String json = getBoardColumnsJson(context);
+            if (json != null && !json.isEmpty()) {
+                columnsArray = new JSONArray(json);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return columnsArray;
+    }
+
+    public static void importBoardColumns(Context context, JSONArray columnsArray) {
+        try {
+            setBoardColumnsJson(context, columnsArray.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static JSONArray exportBoardItems(SQLiteDatabase db) {
+        JSONArray itemsArray = new JSONArray();
+        try {
+            Cursor cursor = db.rawQuery("SELECT _id, column_id, text, completed, position FROM board_items", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    JSONObject item = new JSONObject();
+                    item.put("id", cursor.getLong(0));
+                    item.put("column_id", cursor.getInt(1));
+                    item.put("text", cursor.getString(2));
+                    item.put("completed", cursor.getInt(3));
+                    item.put("position", cursor.getInt(4));
+                    itemsArray.put(item);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return itemsArray;
+    }
+
+    public static void importBoardItems(SQLiteDatabase db, JSONArray itemsArray) {
+        try {
+            db.delete("board_items", null, null);
+            for (int i = 0; i < itemsArray.length(); i++) {
+                JSONObject item = itemsArray.getJSONObject(i);
+                ContentValues values = new ContentValues();
+                values.put("column_id", item.optInt("column_id", 0));
+                values.put("text", item.optString("text", ""));
+                values.put("completed", item.optInt("completed", 0));
+                values.put("position", item.optInt("position", i));
+                db.insert("board_items", null, values);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static JSONArray exportBoardPresets(Context context) {
+        JSONArray presetsArray = new JSONArray();
+        try {
+            SharedPreferences prefs = context.getSharedPreferences("board_prefs", Context.MODE_PRIVATE);
+            String presetsJson = prefs.getString("board_presets_" + context.getPackageName(), "[]");
+            presetsArray = new JSONArray(presetsJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return presetsArray;
+    }
+
+    public static void importBoardPresets(Context context, JSONArray presetsArray) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences("board_prefs", Context.MODE_PRIVATE);
+            prefs.edit().putString("board_presets_" + context.getPackageName(), presetsArray.toString()).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
