@@ -145,48 +145,52 @@ public class BoardColumnAdapter extends RecyclerView.Adapter<BoardColumnAdapter.
 
         holder.columnMenuButton.setOnClickListener(v -> headerListener.onColumnMenuClick(column.id, v));
 
-        BoardItemAdapter itemAdapter = new BoardItemAdapter(context, new BoardItemAdapter.OnBoardItemListener() {
-            @Override
-            public void onItemClick(long itemId, String currentText) {
-                itemListener.onItemClick(itemId, currentText);
-            }
+        if (holder.itemAdapter == null) {
+            holder.itemAdapter = new BoardItemAdapter(context, new BoardItemAdapter.OnBoardItemListener() {
+                @Override
+                public void onItemClick(long itemId, String currentText) {
+                    itemListener.onItemClick(itemId, currentText);
+                }
 
-            @Override
-            public void onItemCompletedChanged(long itemId, boolean completed) {
-                itemListener.onItemCompletedChanged(itemId, completed);
-            }
+                @Override
+                public void onItemCompletedChanged(long itemId, boolean completed) {
+                    itemListener.onItemCompletedChanged(itemId, completed);
+                }
 
-            @Override
-            public void onItemDeleteRequested(long itemId) {
-                itemListener.onItemDeleteRequested(itemId);
-            }
-        });
-        
-        holder.columnCardsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-        holder.columnCardsRecyclerView.setAdapter(itemAdapter);
-        itemAdapter.setItems(column.items);
+                @Override
+                public void onItemDeleteRequested(long itemId) {
+                    itemListener.onItemDeleteRequested(itemId);
+                }
+            });
 
-        BoardItemTouchHelper touchHelper = new BoardItemTouchHelper(new BoardItemTouchHelper.OnItemMoveListener() {
-            @Override
-            public void onItemMoved(int fromPosition, int toPosition) {
-                itemAdapter.moveItem(fromPosition, toPosition);
-            }
+            holder.columnCardsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+            holder.columnCardsRecyclerView.setAdapter(holder.itemAdapter);
 
-            @Override
-            public void onMoveCompleted(int fromPosition, int toPosition, int fromColumnId, int toColumnId) {
-                if (fromColumnId != toColumnId && fromPosition < column.items.size()) {
-                    long itemId = column.items.get(fromPosition).id;
-                    itemListener.onItemMoved(itemId, fromColumnId, toColumnId, toPosition);
-                } else if (fromColumnId == -1 && toColumnId == -1) {
-                    for (int i = 0; i < column.items.size(); i++) {
-                        long itemId = column.items.get(i).id;
-                        itemListener.onItemPositionChanged(itemId, i);
+            ItemTouchHelper.Callback touchHelperCallback = new BoardItemTouchHelper(new BoardItemTouchHelper.OnItemMoveListener() {
+                @Override
+                public void onItemMoved(int fromPosition, int toPosition) {
+                    holder.itemAdapter.moveItem(fromPosition, toPosition);
+                }
+
+                @Override
+                public void onMoveCompleted(int fromPosition, int toPosition, int fromColumnId, int toColumnId) {
+                    if (fromColumnId != toColumnId && fromPosition < column.items.size()) {
+                        long itemId = column.items.get(fromPosition).id;
+                        itemListener.onItemMoved(itemId, fromColumnId, toColumnId, toPosition);
+                    } else if (fromColumnId == -1 && toColumnId == -1) {
+                        for (int i = 0; i < column.items.size(); i++) {
+                            long itemId = column.items.get(i).id;
+                            itemListener.onItemPositionChanged(itemId, i);
+                        }
                     }
                 }
-            }
-        });
-        
-        new ItemTouchHelper(touchHelper).attachToRecyclerView(holder.columnCardsRecyclerView);
+            });
+
+            holder.itemTouchHelper = touchHelperCallback;
+            new ItemTouchHelper(touchHelperCallback).attachToRecyclerView(holder.columnCardsRecyclerView);
+        }
+
+        holder.itemAdapter.setItems(column.items);
 
         holder.addItemButton.setOnClickListener(v -> itemListener.onAddItemClick(column.id));
     }
@@ -225,6 +229,8 @@ public class BoardColumnAdapter extends RecyclerView.Adapter<BoardColumnAdapter.
         ImageButton columnMenuButton;
         RecyclerView columnCardsRecyclerView;
         Button addItemButton;
+        BoardItemAdapter itemAdapter;
+        ItemTouchHelper.Callback itemTouchHelper;
 
         BoardColumnViewHolder(@NonNull View itemView) {
             super(itemView);
