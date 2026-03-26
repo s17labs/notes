@@ -80,6 +80,8 @@ public class BoardItemAdapter extends RecyclerView.Adapter<BoardItemAdapter.Boar
         BoardItem item = items.get(position);
         
         holder.itemText.setText(item.text);
+
+        holder.itemCheckbox.setOnCheckedChangeListener(null);
         holder.itemCheckbox.setChecked(item.completed == 1);
 
         if (item.completed == 1) {
@@ -91,12 +93,24 @@ public class BoardItemAdapter extends RecyclerView.Adapter<BoardItemAdapter.Boar
         }
 
         holder.itemCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            listener.onItemCompletedChanged(item.id, isChecked);
+            if (listener != null) {
+                listener.onItemCompletedChanged(item.id, isChecked);
+            }
         });
 
-        holder.itemView.setOnClickListener(v -> listener.onItemClick(item.id, item.text));
+        holder.itemView.setOnClickListener(null);
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(item.id, item.text);
+            }
+        });
 
-        holder.menuButton.setOnClickListener(v -> showPopupMenu(v, item.id));
+        holder.menuButton.setOnClickListener(null);
+        holder.menuButton.setOnClickListener(v -> {
+            if (listener != null) {
+                showPopupMenu(v, item.id);
+            }
+        });
     }
 
     private void showPopupMenu(View anchor, long itemId) {

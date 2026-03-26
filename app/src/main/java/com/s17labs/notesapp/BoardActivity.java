@@ -383,6 +383,9 @@ public class BoardActivity extends AppCompatActivity implements
 
     @Override
     public void onItemCompletedChanged(long itemId, boolean completed) {
+        if (dbHelper == null || boardAdapter == null) {
+            return;
+        }
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         BoardUtils.updateItemCompleted(db, itemId, completed);
         boardAdapter.updateItemInColumn(itemId, completed);
