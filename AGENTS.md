@@ -20,11 +20,13 @@ chmod +x gradlew && ./gradlew assembleDebug   # build debug APK (what CI/release
 ./gradlew lint                                # Android lint (not part of any workflow)
 ```
 
-- There is no CI on push/PR. `.github/workflows/android.yml` runs only manually
-  (`workflow_dispatch`, debug or release input): it builds a debug APK with JDK 11; the "release"
-  input additionally tags `v<versionName>` and publishes the APK to GitHub Releases with generated notes.
+- CI (`.github/workflows/ci.yml`) runs `assembleDebug` (JDK 11) on every push to `main` and every PR,
+  uploading the debug APK as an artifact; the `build` check is required by branch protection.
+  `.github/workflows/android.yml` remains manual (`workflow_dispatch`, debug or release input): it
+  builds a debug APK with JDK 11; the "release" input additionally tags `v<versionName>` and
+  publishes the APK to GitHub Releases with generated notes.
 - Local sandboxes often lack the Android SDK/JDK or other toolchains — if builds can't run locally,
-  rely on careful code review and let a manual workflow run verify. Never skip updating tests when changing shared interfaces.
+  rely on careful code review and let CI verify. Never skip updating tests when changing shared interfaces.
 
 ## Architecture
 
