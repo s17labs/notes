@@ -76,4 +76,6 @@ jobs:
         with:
           name: Notes_com_s17labs_notesapp_${{ steps.version.outputs.VERSION_UNDERSCORE }}.apk
           path: Notes_com_s17labs_notesapp_${{ steps.version.outputs.VERSION_UNDERSCORE }}.apk
+          # Reproducible from its commit; no reason to keep it 90 days.
+          retention-days: 1
           
